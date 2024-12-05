@@ -12,6 +12,7 @@ const User = require("../schema/user.schema");
 
 
 router.post("/register", async (req, res) => {
+    console.log(req.body)
     const {name, email, mobile, password} = req.body;
 
     const isEmailRegistered = await User.findOne({email});

@@ -11,9 +11,38 @@ dotenv.config();
 
 
 router.get('/', async (req, res) => {
-    const jobs = await Job.find({});
+    const {limit, offset, q, jobPosition, minSalary, maxSalary, jobType, remoteOffice, skillsRequired } = req.query;
+
+
+    let searchConditions = [];
+    if (q) {
+        const keywords = q.split(' ');
+        keywords.forEach(keyword => {
+            searchConditions.push(
+                { companyName: {$regex: new RegExp(keyword, 'i')}},
+                {jobPosition: {$regex: new RegExp(keyword, 'i')}},
+                {location: {$regex: new RegExp(keyword, 'i')}}
+            );
+        });
+    };
+
+
+    const filters = {
+        ...(searchConditions.length > 0 && {$or:searchConditions}),
+        ...(jobType && {jobType}),
+        ...(jobPosition && {jobPosition}),
+        ...((minSalary && !maxSalary) && {salary: { $gte: minSalary }}),
+        ...((!minSalary && maxSalary) && {salary: { $lte: maxSalary }}),
+        ...((minSalary && maxSalary) && {salary: {$gte: Number(minSalary), $lte: Number(maxSalary)}}),
+        ...(remoteOffice && {remoteOffice}),
+        ...(skillsRequired && {skillsRequired: { $in: skillsRequired.split(',') }}),
+    }
+
+    const jobs = await Job.find(filters).skip(Number(offset)).limit(Number(limit));
     return res.status(200).json(jobs);
 });
+
+
 
 router.get("/:id", async (req, res) => {
     const { id } = req.params;
@@ -77,8 +106,7 @@ router.post('/', auth, async (req, res) => {
         !location ||
         !jobDescription ||
         !companyDescription  ||
-        !skillsRequired  ||
-        !additionalInfo) {
+        !skillsRequired) {
             return res.status(400).json({message: "Missing required fields"});
         }
         console.log("Logged-in user ID:", req.user.id);
