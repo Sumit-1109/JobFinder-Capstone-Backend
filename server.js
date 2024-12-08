@@ -25,7 +25,7 @@ PORT = process.env.PORT || 8000;
 app.use(express.urlencoded({extended: true}));
 
 app.use("/api/user", userRoutes);
-app.use('/', jobRoutes);
+app.use('/api/jobs', jobRoutes);
 
 
 

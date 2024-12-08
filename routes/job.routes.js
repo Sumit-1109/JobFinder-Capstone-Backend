@@ -31,14 +31,14 @@ router.get('/', async (req, res) => {
         ...(searchConditions.length > 0 && {$or:searchConditions}),
         ...(jobType && {jobType}),
         ...(jobPosition && {jobPosition}),
-        ...((minSalary && !maxSalary) && {salary: { $gte: minSalary }}),
-        ...((!minSalary && maxSalary) && {salary: { $lte: maxSalary }}),
+        ...((minSalary && !maxSalary) && {salary: { $gte: Number(minSalary)}}),
+        ...((!minSalary && maxSalary) && {salary: { $lte: Number(maxSalary)}}),
         ...((minSalary && maxSalary) && {salary: {$gte: Number(minSalary), $lte: Number(maxSalary)}}),
         ...(remoteOffice && {remoteOffice}),
         ...(skillsRequired && {skillsRequired: { $in: skillsRequired.split(',') }}),
     }
 
-    const jobs = await Job.find(filters).skip(Number(offset)).limit(Number(limit));
+    const jobs = await Job.find(filters).skip(Number(offset) || 0).limit(Number(limit) || 0);
     return res.status(200).json(jobs);
 });
 
