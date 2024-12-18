@@ -12,7 +12,7 @@ const User = require("../schema/user.schema");
 
 
 router.post("/register", async (req, res) => {
-    console.log(req.body)
+
     const {name, email, mobile, password} = req.body;
 
     const isEmailRegistered = await User.findOne({email});
@@ -50,17 +50,19 @@ router.post("/register", async (req, res) => {
 
 
 router.post('/login', async (req, res) => {
+    console.log('called');
     const {email, password} = req.body;
 
     const user = await User.findOne({email});
 
     try{
         if (!user){
-            return res.status(400).json({message: "Email Id not registered !!"});
+            return res.status(404).json({message: "Email Id not registered !!"});
         }
         const isvalidpassword = await bcrypt.compare(password,user.password);
         if (!isvalidpassword){
-            return res.status(400).json({message: "Wrong Password"});
+            return res.status(404).json({message: "Incorrect Password !!"});
+            console.log(res);
         };
 
         const payload = {
@@ -75,8 +77,8 @@ router.post('/login', async (req, res) => {
 
         return res.status(200).json({message: "Token created Successfully", token: token});
 
+
     } catch (err){
-        console.log(err)
         return res.status(500).json({message: "Error in finding user !!", err});
     }
 

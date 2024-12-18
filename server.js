@@ -1,42 +1,40 @@
 const express = require("express");
-const connectDB = require("./db/db");
-const cors = require("cors");
-const dotenv =  require("dotenv");
-const userRoutes = require('./routes/user.routes');
-const jobRoutes = require('./routes/job.routes');
-
-
 const app = express();
-
-
-
-app.use(express.json());
+const path = require("path");
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+const bodyParser = require("body-parser");
+const userRoute = require("./routes/user.routes");
+const jobRoute = require("./routes/job.routes");
+const skillRoute = require("./routes/skill");
+const jobPositionRoute = require('./routes/jobPosition');
+const cors = require("cors");
+const connectDB = require('./db/db');
+dotenv.config();
 app.use(cors());
+const PORT = process.env.PORT || 3000;
+app.use(express.static(path.join(__dirname, "public")));
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "try.html"));
+});
 
 
-
-dotenv.config(); 
-
-
-
-PORT = process.env.PORT || 8000;
-
-
-app.use(express.urlencoded({extended: true}));
-
-app.use("/api/user", userRoutes);
-app.use('/api/jobs', jobRoutes);
-
-
+app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use("/api/user", userRoute);
+app.use("/api/jobs", jobRoute);
+app.use("/api", skillRoute);
+app.use("/api", jobPositionRoute);
 
 
 connectDB().then(() => {
     app.listen(PORT, (err) => {
-        if (err){
-            console.error(err);
+        if (err) {
+            console.log(err);
         }
         console.log(`Server is running successfully on port: ${PORT}`);
     });
-}).catch ((err) => {
+}).catch((err) => {
     console.error(err);
-})
+});
+
