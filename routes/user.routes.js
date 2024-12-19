@@ -13,36 +13,36 @@ const User = require("../schema/user.schema");
 
 router.post("/register", async (req, res) => {
 
-    const {name, email, mobile, password} = req.body;
+    const {name, email, mobile, password, continueToggle} = req.body;
 
     const isEmailRegistered = await User.findOne({email});
     const isMobileResgistered = await User.findOne({mobile});
 
     if (isEmailRegistered) {
-        return res.status(400).json("Email is already registered !!");
-    } else if (isMobileResgistered) {
-        return res.status(400).json("Mobile is already registered !!");
+        return res.status(400).json({message: "User already exists !!"});
+    } else if (isMobileResgistered && !continueToggle) {
+        return res.status(208).json({message: "Mobile already registered"});
     }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await  bcrypt.hash(password, salt);
 
-    try{
-        const user = await User.create({
-            name,
-            email,
-            mobile,
-            password: hashedPassword
-        })
-
-        await user.save();
-
-        return res.status(200).json({message: "User created successfully !!"});
-
-    } catch (err) {
-        console.log(err)
-        return res.status(500).json({message: "Error in creating User !!", err});
-    }
+        try{
+            const user = await User.create({
+                name,
+                email,
+                mobile,
+                password: hashedPassword
+            })
+    
+            await user.save();
+    
+            return res.status(200).json({message: "User created successfully !!"});
+    
+        } catch (err) {
+            console.log(err)
+            return res.status(500).json({message: "Error in creating User !!", err});
+        }
 
 });
 
@@ -50,18 +50,17 @@ router.post("/register", async (req, res) => {
 
 
 router.post('/login', async (req, res) => {
-    console.log('called');
     const {email, password} = req.body;
 
     const user = await User.findOne({email});
 
     try{
         if (!user){
-            return res.status(404).json({message: "Email Id not registered !!"});
+            return res.status(404).json({message: "Invalid Credentials"});
         }
         const isvalidpassword = await bcrypt.compare(password,user.password);
         if (!isvalidpassword){
-            return res.status(404).json({message: "Incorrect Password !!"});
+            return res.status(404).json({message: "Invalid Credentials"});
             console.log(res);
         };
 
